@@ -38,7 +38,6 @@ function get_tags(bibdata) {
 
 
 function write_bib(bibdata) {
-    console.log(document);
     const listviewer = document.getElementById("biblio-table");
 
     let s = ""
