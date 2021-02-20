@@ -36,19 +36,51 @@ function get_tags(bibdata) {
     return tags;
 }
 
+function show_info(bibdata, key) {
+    const infoviewer = document.getElementById("info-viewer");
+    const noteeditor = document.getElementById("note-editor");
+
+    const s = bibdata[key].AUTHOR + "<br>\n" +
+        bibdata[key].TITLE + "<br>\n" +
+        bibdata[key].YEAR + "\n";
+    infoviewer.innerHTML = s;
+
+    const note = bibdata[key].ANNOTE;
+    if (note != undefined) {
+        noteeditor.value = note;
+    }
+    else {
+        noteeditor.value = "";
+    }
+}
 
 function write_bib(bibdata) {
     const listviewer = document.getElementById("biblio-table");
 
-    let s = ""
-    Object.keys(bibdata).forEach(function(key) {
-        s =  "<tr>";
-        s += "<td>" + bibdata[key].AUTHOR + "</td>";
-        s += "<td>" + bibdata[key].TITLE + "</td>";
-        s += "<td>" + bibdata[key].YEAR + "</td>";
-        s += "</tr>\n";
+    for (var key in bibdata) {
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td");
+        const td2 = document.createElement("td");
+        const td3 = document.createElement("td");
 
-        listviewer.innerHTML += s;
+        listviewer.appendChild(tr);
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.appendChild(td3);
+
+        tr.setAttribute("id", "item_" + key);
+        td1.innerText = bibdata[key].AUTHOR;
+        td2.innerText = bibdata[key].TITLE;
+        td3.innerText = bibdata[key].YEAR;
+
+        addClickHandler(document.getElementById("item_" + key), bibdata, key);
+    }
+}
+
+
+function addClickHandler(element, bibdata, key) {
+    element.addEventListener("click", function(e) {
+        show_info(bibdata, key, false);
     });
 }
 
