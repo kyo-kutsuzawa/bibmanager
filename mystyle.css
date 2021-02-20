@@ -1,0 +1,40 @@
+html {
+    font-family: sans-serif;
+    height: 100%;
+}
+
+body {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: 100%;
+    margin: 0;
+}
+
+tr {
+    border-style: solid;
+}
+
+td {
+    overflow: hidden;
+}
+
+#tag-viewer {
+    grid-row: 1 / 3;
+    overflow: scroll;
+}
+
+#list-viewer {
+    border: none;
+    grid-row: 1 / 3;
+    overflow: scroll;
+}
+
+#info-viewer {
+    background-color: gray;
+}
+
+#note-editor {
+    background-color: gray;
+}

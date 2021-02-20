@@ -1,45 +1,63 @@
-'use strict';
-
-var bibtex_parser = require("bibtex-parser");
+const bibtex_parser = require("bibtex-parser");
 const fs = require("fs");
 
-//const bibfilename = "library-full.bib"
-const bibfilename = "library-mid.bib"
+const bibfilename = "library-short.bib"
 
 
-function load_bib() {
-    fs.readFile(bibfilename, "utf-8", (err, data) => {
-        if (err) throw err;
-        const bibdata = parse_bib(data);
-        write_bib(bibdata);
-    });
+window.onload = function() {
+    const bibdata_raw = fs.readFileSync(bibfilename, "utf-8");
+    const bibdata = parse_bib(bibdata_raw);
+    const tags = get_tags(bibdata);
+
+    write_bib(bibdata);
+    write_tags(tags);
 }
 
 
 function parse_bib(data) {
-    console.log("Load bib data");
     const bibdata = bibtex_parser(data);
-    console.log(bibdata);
-
-    //console.log(bibdata.FUJIMOTO2000);
-    //console.log(bibdata.FUJIMOTO2000.entryType);
-
     return bibdata;
 }
 
 
+function get_tags(bibdata) {
+    let tag_list = [];
+    let t = [];
+
+    Object.keys(bibdata).forEach(function(key) {
+        t = bibdata[key]["MENDELEY-TAGS"];
+
+        if (t != undefined) {
+            Array.prototype.push.apply(tag_list, t.split(","));
+        }
+    });
+
+    const tags = Array.from(new Set(tag_list));
+    return tags;
+}
+
+
 function write_bib(bibdata) {
-    let a = document.getElementById("biblist");
+    console.log(document);
+    const listviewer = document.getElementById("biblio-table");
 
     let s = ""
     Object.keys(bibdata).forEach(function(key) {
-        s =  "<li>";
-        s += bibdata[key].AUTHOR + "; ";
-        s += "\"" + bibdata[key].TITLE + "\"";
-        s += ", " + bibdata[key].YEAR + ".";
-        s += "</li>";
-        a.innerHTML += s;
+        s =  "<tr>";
+        s += "<td>" + bibdata[key].AUTHOR + "</td>";
+        s += "<td>" + bibdata[key].TITLE + "</td>";
+        s += "<td>" + bibdata[key].YEAR + "</td>";
+        s += "</tr>\n";
+
+        listviewer.innerHTML += s;
     });
 }
 
-load_bib();
+
+function write_tags(tags) {
+    const tagviewer = document.getElementById("tag-viewer");
+
+    tags.forEach(tag => {
+        tagviewer.innerHTML += "<div>" + tag + "</div>\n";
+    });
+}

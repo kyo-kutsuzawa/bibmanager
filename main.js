@@ -12,11 +12,12 @@ app.on("ready", () => {
             nodeIntegration: true
           }
     });
+
     // Specify html file to show in Electron by absolute path (note that relative path does not work)
     mainWindow.loadURL("file://" + __dirname + "/index.html");
 
     // Open a dev tool of Chromium
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 
     mainWindow.on("closed", function() {
         mainWindow = null;
