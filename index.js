@@ -1,7 +1,10 @@
 const bibtex_parser = require("bibtex-parser");
 const fs = require("fs");
 
-const bibfilename = "library-short.bib"
+const bibfilename = "library-short.bib";
+
+let focused_bib_id = "";
+let focused_tag_id = "";
 
 
 window.onload = function() {
@@ -73,13 +76,22 @@ function write_bib(bibdata) {
         td2.innerText = bibdata[key].TITLE;
         td3.innerText = bibdata[key].YEAR;
 
-        addClickHandler(document.getElementById("item_" + key), bibdata, key);
+        addBibClickHandler(tr, bibdata, key);
     }
 }
 
 
-function addClickHandler(element, bibdata, key) {
+function addBibClickHandler(element, bibdata, key) {
     element.addEventListener("click", function(e) {
+
+        if (focused_bib_id != "") {
+            const prev_item = document.getElementById(focused_bib_id);
+            prev_item.setAttribute("class", "unfocused");
+        }
+
+        focused_bib_id = element.id;
+        element.setAttribute("class", "focused");
+
         show_info(bibdata, key, false);
     });
 }
@@ -89,6 +101,25 @@ function write_tags(tags) {
     const tagviewer = document.getElementById("tag-viewer");
 
     tags.forEach(tag => {
-        tagviewer.innerHTML += "<div>" + tag + "</div>\n";
+        const item = document.createElement("div");
+        tagviewer.appendChild(item);
+        item.setAttribute("id", "tag_" + tag);
+        item.innerText = tag;
+        addTagClickHandler(item);
+    });
+
+    addTagClickHandler(document.getElementById("tags_all"));
+}
+
+
+function addTagClickHandler(element) {
+    element.addEventListener("click", function(e) {
+        if (focused_tag_id != "") {
+            const prev_item = document.getElementById(focused_tag_id);
+            prev_item.setAttribute("class", "unfocused");
+        }
+
+        focused_tag_id = element.id;
+        element.setAttribute("class", "focused");
     });
 }

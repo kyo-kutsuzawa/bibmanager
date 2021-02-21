@@ -42,6 +42,11 @@ td {
     background-color: #dfe6e9;
 }
 
+.focused {
+    background-color: #b2bec3 !important;
+    outline: none;
+}
+
 #info-viewer {
     background-color: white;
 }
