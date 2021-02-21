@@ -51,10 +51,21 @@ function show_info(bibdata, key) {
     const noteeditor = document.getElementById("note-editor");
 
     // Output to the information viewer
-    const s = bibdata[key].AUTHOR + "<br>\n" +
-        bibdata[key].TITLE + "<br>\n" +
-        bibdata[key].YEAR + "\n";
-    infoviewer.innerHTML = s;
+    const items = {
+        entryType: "bib-entry-type",
+        TITLE: "bib-title",
+        AUTHOR: "bib-author",
+        "MENDELEY-TAGS": "bib-tags",
+        YEAR: "bib-year",
+    }
+    for (var item in items) {
+        if (bibdata[key][item] != undefined) {
+            const element = document.getElementById(items[item]);
+            element.innerHTML = bibdata[key][item];
+        }
+    }
+    const element = document.getElementById("bib-key");
+    element.innerHTML = key;
 
     // Output notes to the note editor
     const note = bibdata[key].ANNOTE;

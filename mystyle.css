@@ -49,8 +49,24 @@ td {
 
 #info-viewer {
     background-color: white;
+    padding: 10px;
+}
+
+#info-viewer > div {
+    margin-bottom: 10px;
 }
 
 #note-editor {
     background-color: white;
+}
+
+.info-item {
+    font-weight: bold;
+    line-height: 120%;
+    width: 100px;
+}
+
+#bib-title {
+    font-weight: bold;
+    font-size: large;
 }
