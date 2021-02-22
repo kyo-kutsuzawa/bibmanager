@@ -1,7 +1,7 @@
 const bibtex_parser = require("bibtex-parser");
 const fs = require("fs");
 
-const bibfilename = "library-short.bib";
+const bibFileName = "library-short.bib";
 
 let bibData = undefined;
 let focusedBibId = "";
@@ -20,7 +20,7 @@ window.onload = function() {
 
 
 function loadbibData() {
-    const rawbibData = fs.readFileSync(bibfilename, "utf-8");
+    const rawbibData = fs.readFileSync(bibFileName, "utf-8");
     bibData = bibtex_parser(rawbibData);
 }
 
