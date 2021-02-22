@@ -3,53 +3,53 @@ const fs = require("fs");
 
 const bibfilename = "library-short.bib";
 
-let bibdata = undefined;
-let focused_bib_id = "";
-let focused_tag_id = "";
+let bibData = undefined;
+let focusedBibId = "";
+let focusedTagId = "";
 
 
 window.onload = function() {
     // Load and parse bibliography
-    load_bibdata();
-    const tags = get_tags(bibdata);
+    loadbibData();
+    const tags = extractTags(bibData);
 
-    write_bib(bibdata);
-    write_tags(tags);
-    add_info_events();
+    showBib(bibData);
+    showTags(tags);
+    registerInfoEvents();
 }
 
 
-function load_bibdata() {
-    const bibdata_raw = fs.readFileSync(bibfilename, "utf-8");
-    bibdata = bibtex_parser(bibdata_raw);
+function loadbibData() {
+    const rawbibData = fs.readFileSync(bibfilename, "utf-8");
+    bibData = bibtex_parser(rawbibData);
 }
 
 
-function get_tags(bibdata) {
-    let tag_list = [];
+function extractTags(bibData) {
+    let tagList = [];
     let t = [];
 
-    Object.keys(bibdata).forEach(function(key) {
+    Object.keys(bibData).forEach(function(key) {
         // Get tags in a reference
-        t = bibdata[key]["MENDELEY-TAGS"];
+        t = bibData[key]["MENDELEY-TAGS"];
 
         // Add the tags to a list
         if (t != undefined) {
-            Array.prototype.push.apply(tag_list, t.split(","));
+            Array.prototype.push.apply(tagList, t.split(","));
         }
     });
 
     // Remove duplicates
-    const tags = Array.from(new Set(tag_list));
+    const tags = Array.from(new Set(tagList));
 
     return tags;
 }
 
 
-function show_info(bibdata, key) {
+function showInfo(bibData, key) {
     // Get viewers
-    const infoviewer = document.getElementById("info-viewer");
-    const noteeditor = document.getElementById("note-editor");
+    const infoViewer = document.getElementById("info-viewer");
+    const noteEditor = document.getElementById("note-editor");
 
     // Output to the information viewer
     const items = {
@@ -60,29 +60,29 @@ function show_info(bibdata, key) {
         YEAR: "bib-year",
     }
     for (var item in items) {
-        if (bibdata[key][item] != undefined) {
+        if (bibData[key][item] != undefined) {
             const element = document.getElementById(items[item]);
-            element.value = bibdata[key][item];
+            element.value = bibData[key][item];
         }
     }
     const element = document.getElementById("bib-key");
     element.value = key;
 
     // Output notes to the note editor
-    const note = bibdata[key].ANNOTE;
+    const note = bibData[key].ANNOTE;
     if (note != undefined) {
-        noteeditor.value = note;
+        noteEditor.value = note;
     }
     else {
-        noteeditor.value = "";
+        noteEditor.value = "";
     }
 }
 
 
-function write_bib(bibdata) {
-    const listviewer = document.getElementById("biblio-table");
+function showBib(bibData) {
+    const listViewer = document.getElementById("biblio-table");
 
-    for (var key in bibdata) {
+    for (var key in bibData) {
         // Setup item elements
         const tr = document.createElement("tr");
         const td1 = document.createElement("td");
@@ -90,16 +90,16 @@ function write_bib(bibdata) {
         const td3 = document.createElement("td");
 
         // Add items to the list viewer
-        listviewer.appendChild(tr);
+        listViewer.appendChild(tr);
         tr.appendChild(td1);
         tr.appendChild(td2);
         tr.appendChild(td3);
 
         // Setup information
         tr.setAttribute("id", "item_" + key);
-        td1.innerText = bibdata[key].AUTHOR;
-        td2.innerText = bibdata[key].TITLE;
-        td3.innerText = bibdata[key].YEAR;
+        td1.innerText = bibData[key].AUTHOR;
+        td2.innerText = bibData[key].TITLE;
+        td3.innerText = bibData[key].YEAR;
 
         // Setup events
         addBibClickHandler(tr, key);
@@ -110,28 +110,28 @@ function write_bib(bibdata) {
 function addBibClickHandler(element, key) {
     element.addEventListener("click", function(e) {
         // Unfocus the previously-focused item
-        if (focused_bib_id != "") {
-            const prev_item = document.getElementById(focused_bib_id);
+        if (focusedBibId != "") {
+            const prev_item = document.getElementById(focusedBibId);
             prev_item.setAttribute("class", "unfocused");
         }
 
         // Set focus to the current item
-        focused_bib_id = element.id;
+        focusedBibId = element.id;
         element.setAttribute("class", "focused");
 
         // Show bibliography information
-        show_info(bibdata, key, false);
+        showInfo(bibData, key, false);
     });
 }
 
 
-function write_tags(tags) {
-    const tagviewer = document.getElementById("tag-viewer");
+function showTags(tags) {
+    const tagViewer = document.getElementById("tag-viewer");
 
     tags.forEach(tag => {
         // Setup tag items
         const item = document.createElement("div");
-        tagviewer.appendChild(item);
+        tagViewer.appendChild(item);
         item.setAttribute("id", "tag_" + tag);
         item.innerText = tag;
 
@@ -147,19 +147,19 @@ function write_tags(tags) {
 function addTagClickHandler(element) {
     element.addEventListener("click", function(e) {
         // Unfocus the previously-focused item
-        if (focused_tag_id != "") {
-            const prev_item = document.getElementById(focused_tag_id);
+        if (focusedTagId != "") {
+            const prev_item = document.getElementById(focusedTagId);
             prev_item.setAttribute("class", "unfocused");
         }
 
         // Set focus to the current item
-        focused_tag_id = element.id;
+        focusedTagId = element.id;
         element.setAttribute("class", "focused");
     });
 }
 
 
-function add_info_events() {
+function registerInfoEvents() {
     idList = [
         "bib-title",
         "bib-author",
@@ -179,7 +179,7 @@ function add_info_events() {
 }
 
 
-function updateInfo(id, content_new) {
+function updateInfo(id, newContent) {
     const items = {
         "bib-entry-type": "entryType",
         "bib-title": "TITLE",
@@ -188,5 +188,5 @@ function updateInfo(id, content_new) {
         "bib-year": "YEAR",
     }
 
-    console.log(content_new);
+    console.log(newContent);
 }
