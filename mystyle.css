@@ -56,6 +56,18 @@ td {
     margin-bottom: 10px;
 }
 
+#info-viewer textarea {
+    border: none;
+    resize: vertical;
+    width: 100%;
+}
+
+#info-viewer input {
+    border: none;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
 #note-editor {
     background-color: white;
 }

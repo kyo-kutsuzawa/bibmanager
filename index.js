@@ -3,24 +3,25 @@ const fs = require("fs");
 
 const bibfilename = "library-short.bib";
 
+let bibdata = undefined;
 let focused_bib_id = "";
 let focused_tag_id = "";
 
 
 window.onload = function() {
     // Load and parse bibliography
-    const bibdata_raw = fs.readFileSync(bibfilename, "utf-8");
-    const bibdata = parse_bib(bibdata_raw);
+    load_bibdata();
     const tags = get_tags(bibdata);
 
     write_bib(bibdata);
     write_tags(tags);
+    add_info_events();
 }
 
 
-function parse_bib(data) {
-    const bibdata = bibtex_parser(data);
-    return bibdata;
+function load_bibdata() {
+    const bibdata_raw = fs.readFileSync(bibfilename, "utf-8");
+    bibdata = bibtex_parser(bibdata_raw);
 }
 
 
@@ -61,11 +62,11 @@ function show_info(bibdata, key) {
     for (var item in items) {
         if (bibdata[key][item] != undefined) {
             const element = document.getElementById(items[item]);
-            element.innerHTML = bibdata[key][item];
+            element.value = bibdata[key][item];
         }
     }
     const element = document.getElementById("bib-key");
-    element.innerHTML = key;
+    element.value = key;
 
     // Output notes to the note editor
     const note = bibdata[key].ANNOTE;
@@ -101,12 +102,12 @@ function write_bib(bibdata) {
         td3.innerText = bibdata[key].YEAR;
 
         // Setup events
-        addBibClickHandler(tr, bibdata, key);
+        addBibClickHandler(tr, key);
     }
 }
 
 
-function addBibClickHandler(element, bibdata, key) {
+function addBibClickHandler(element, key) {
     element.addEventListener("click", function(e) {
         // Unfocus the previously-focused item
         if (focused_bib_id != "") {
@@ -155,4 +156,37 @@ function addTagClickHandler(element) {
         focused_tag_id = element.id;
         element.setAttribute("class", "focused");
     });
+}
+
+
+function add_info_events() {
+    idList = [
+        "bib-title",
+        "bib-author",
+        "bib-key",
+        "bib-entry-type",
+        "bib-year",
+        "bib-tags",
+        "note-editor"
+    ]
+    idList.forEach(id => {
+        const element = document.getElementById(id);
+        element.tabIndex = -1;
+        element.addEventListener("change", function(e) {
+            updateInfo(id, element.value);
+        });
+    });
+}
+
+
+function updateInfo(id, content_new) {
+    const items = {
+        "bib-entry-type": "entryType",
+        "bib-title": "TITLE",
+        "bib-author": "AUTHOR",
+        "bib-tags": "MENDELEY-TAGS",
+        "bib-year": "YEAR",
+    }
+
+    console.log(content_new);
 }
