@@ -85,30 +85,31 @@ function showBib(bibData) {
     for (var key in bibData) {
         // Setup item elements
         const tr = document.createElement("tr");
-        const td1 = document.createElement("td");
-        const td2 = document.createElement("td");
-        const td3 = document.createElement("td");
-
-        // Add items to the list viewer
         listViewer.appendChild(tr);
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tr.appendChild(td3);
-
-        // Setup information
-        tr.setAttribute("id", "item_" + key);
-        td1.innerText = bibData[key].AUTHOR;
-        td2.innerText = bibData[key].TITLE;
-        td3.innerText = bibData[key].YEAR;
-
-        // Setup events
-        addBibClickHandler(tr, key);
+        registerBibList(tr, key);
     }
 }
 
 
-function addBibClickHandler(element, key) {
-    element.onclick = function(e) {
+function registerBibList(tr, key) {
+    // Setup item elements
+    const td1 = document.createElement("td");
+    const td2 = document.createElement("td");
+    const td3 = document.createElement("td");
+
+    // Add items to the list viewer
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tr.appendChild(td3);
+
+    // Setup information
+    tr.setAttribute("id", "item_" + key);
+    td1.innerText = bibData[key].AUTHOR;
+    td2.innerText = bibData[key].TITLE;
+    td3.innerText = bibData[key].YEAR;
+
+    // Setup events
+    tr.onclick = function(e) {
         // Unfocus the previously-focused item
         if (focusedBibId != "") {
             const prev_item = document.getElementById(focusedBibId);
@@ -116,8 +117,8 @@ function addBibClickHandler(element, key) {
         }
 
         // Set focus to the current item
-        focusedBibId = element.id;
-        element.setAttribute("class", "focused");
+        focusedBibId = tr.id;
+        tr.setAttribute("class", "focused");
 
         // Show bibliography information
         showInfo(bibData, key, false);
@@ -206,13 +207,14 @@ function updateInfo(id, newContent) {
 
         // Update bibliography list
         const tr = document.getElementById("item_" + key);
-        tr.setAttribute("id", "item_" + newKey);
+        tr.innerHTML = "";
         focusedBibId = "item_" + newKey;
-
-        // Setup events
-        addBibClickHandler(tr, newKey);
+        registerBibList(tr, newKey);
     }
     else {
-        bibData[focusedBibId.slice(5)][item] = newContent;
+        bibData[key][item] = newContent;
+        const tr = document.getElementById("item_" + key);
+        tr.innerHTML = "";
+        registerBibList(tr, key);
     }
 }
