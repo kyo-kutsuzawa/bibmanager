@@ -108,7 +108,7 @@ function showBib(bibData) {
 
 
 function addBibClickHandler(element, key) {
-    element.addEventListener("click", function(e) {
+    element.onclick = function(e) {
         // Unfocus the previously-focused item
         if (focusedBibId != "") {
             const prev_item = document.getElementById(focusedBibId);
@@ -121,7 +121,7 @@ function addBibClickHandler(element, key) {
 
         // Show bibliography information
         showInfo(bibData, key, false);
-    });
+    };
 }
 
 
@@ -180,13 +180,39 @@ function registerInfoEvents() {
 
 
 function updateInfo(id, newContent) {
-    const items = {
+    const itemList = {
         "bib-entry-type": "entryType",
         "bib-title": "TITLE",
         "bib-author": "AUTHOR",
         "bib-tags": "MENDELEY-TAGS",
         "bib-year": "YEAR",
+        "bib-key": "citation key"
     }
 
-    console.log(newContent);
+    const item = itemList[id];
+    const key = focusedBibId.slice(5);
+
+    if (id == "bib-key") {
+        const newKey = newContent;
+
+        // Check duplicate
+        if (newKey in bibData) {
+            return;
+        }
+
+        // Update bibData
+        bibData[newKey] = bibData[key];
+        delete bibData[key];
+
+        // Update bibliography list
+        const tr = document.getElementById("item_" + key);
+        tr.setAttribute("id", "item_" + newKey);
+        focusedBibId = "item_" + newKey;
+
+        // Setup events
+        addBibClickHandler(tr, newKey);
+    }
+    else {
+        bibData[focusedBibId.slice(5)][item] = newContent;
+    }
 }
