@@ -1,7 +1,4 @@
-const bibtex_parser = require("bibtex-parser");
-const fs = require("fs");
-
-const bibFileName = "library-short.bib";
+const {ipcRenderer} = require('electron');
 
 let bibData = undefined;
 let focusedBibId = "";
@@ -9,40 +6,48 @@ let focusedTagId = "";
 
 
 window.onload = function() {
-    // Load and parse bibliography
-    loadbibData();
-    const tags = extractTags(bibData);
-
+    bibData = ipcRenderer.sendSync("get_bibData");
     showBib(bibData);
+
+    const tags = ipcRenderer.sendSync("extract_tags");
     showTags(tags);
+
     registerInfoEvents();
 }
 
 
-function loadbibData() {
-    const rawbibData = fs.readFileSync(bibFileName, "utf-8");
-    bibData = bibtex_parser(rawbibData);
+function showBib(bibData) {
+    const listViewer = document.getElementById("biblio-table");
+
+    for (var key in bibData) {
+        // Setup item elements
+        const tr = document.createElement("tr");
+        listViewer.appendChild(tr);
+        registerBibList(tr, key);
+    }
 }
 
 
-function extractTags(bibData) {
-    let tagList = [];
-    let t = [];
+function showTags(tags) {
+    const tagViewer = document.getElementById("tag-viewer");
 
-    Object.keys(bibData).forEach(function(key) {
-        // Get tags in a reference
-        t = bibData[key]["MENDELEY-TAGS"];
+    tags.forEach(tag => {
+        // Setup tag items
+        const item = document.createElement("div");
+        tagViewer.appendChild(item);
+        item.setAttribute("id", "tag_" + tag);
+        item.innerText = tag;
 
-        // Add the tags to a list
-        if (t != undefined) {
-            Array.prototype.push.apply(tagList, t.split(","));
-        }
+        // Setup events
+        addTagClickHandler(item);
     });
 
-    // Remove duplicates
-    const tags = Array.from(new Set(tagList));
+    // Setup events to "All" item
+    addTagClickHandler(document.getElementById("tags_all"));
 
-    return tags;
+    // Set the initial focus to "All" item
+    focusedTagId = "tags_all";
+    document.getElementById("tags_all").setAttribute("class", "focused");
 }
 
 
@@ -79,18 +84,6 @@ function showInfo(bibData, key) {
 }
 
 
-function showBib(bibData) {
-    const listViewer = document.getElementById("biblio-table");
-
-    for (var key in bibData) {
-        // Setup item elements
-        const tr = document.createElement("tr");
-        listViewer.appendChild(tr);
-        registerBibList(tr, key);
-    }
-}
-
-
 function registerBibList(tr, key) {
     // Setup item elements
     const td1 = document.createElement("td");
@@ -113,7 +106,7 @@ function registerBibList(tr, key) {
         // Unfocus the previously-focused item
         if (focusedBibId != "") {
             const prev_item = document.getElementById(focusedBibId);
-            prev_item.setAttribute("class", "unfocused");
+            prev_item.removeAttribute("class");
         }
 
         // Set focus to the current item
@@ -126,31 +119,12 @@ function registerBibList(tr, key) {
 }
 
 
-function showTags(tags) {
-    const tagViewer = document.getElementById("tag-viewer");
-
-    tags.forEach(tag => {
-        // Setup tag items
-        const item = document.createElement("div");
-        tagViewer.appendChild(item);
-        item.setAttribute("id", "tag_" + tag);
-        item.innerText = tag;
-
-        // Setup events
-        addTagClickHandler(item);
-    });
-
-    // Setup events to "All" item
-    addTagClickHandler(document.getElementById("tags_all"));
-}
-
-
 function addTagClickHandler(element) {
     element.addEventListener("click", function(e) {
         // Unfocus the previously-focused item
         if (focusedTagId != "") {
             const prev_item = document.getElementById(focusedTagId);
-            prev_item.setAttribute("class", "unfocused");
+            prev_item.removeAttribute("class");
         }
 
         // Set focus to the current item
@@ -187,7 +161,8 @@ function updateInfo(id, newContent) {
         "bib-author": "AUTHOR",
         "bib-tags": "MENDELEY-TAGS",
         "bib-year": "YEAR",
-        "bib-key": "citation key"
+        "bib-key": "citation key",
+        "note-editor": "ANNOTE"
     }
 
     const item = itemList[id];

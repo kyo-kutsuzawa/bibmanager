@@ -19,6 +19,8 @@ tr {
 
 td {
     overflow: hidden;
+    padding: 5px;
+    height: 3em;
 }
 
 #tag-viewer {
