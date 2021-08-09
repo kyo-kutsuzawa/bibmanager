@@ -16,7 +16,6 @@ let focusedBibId = "";
 function loadbibData() {
     const rawbibData = fs.readFileSync(bibFileName, "utf-8");
     bibData = bibtex_parser(rawbibData);
-
     for (let id in bibData) {
         bibData[id]["CITATION-KEY"] = id;
     }
@@ -33,24 +32,21 @@ ipcMain.on("get_bibData", (event) => {
 })
 
 
+ipcMain.on("get_info", (event, id) => {
+    event.returnValue = bibData[id];
+})
+
+
 ipcMain.on("change_info", (event, id, item, value) => {
     if (!bibData[id]) {
         event.returnValue = false;
         return;
     }
 
+    // NotImplemented: check duplication of citation keys
+
     bibData[id][item] = value;
     event.returnValue = true;
-})
-
-
-ipcMain.on("set_focus", (event, key) => {
-    focusedBibId = key;
-})
-
-
-ipcMain.on("get_focused_item", (event) => {
-    focusedBibId = key;
 })
 
 
@@ -74,6 +70,23 @@ ipcMain.on("extract_tags", (event) => {
     tagList.sort();
 
     event.returnValue = tagList;
+})
+
+
+ipcMain.on("filter_by_tag", (event, tag) => {
+    let bibList = {};
+    for (let id in bibData) {
+        const item = bibData[id];
+        const tags = item["MENDELEY-TAGS"];
+        if (tags === undefined) {
+            continue;
+        }
+        if (tags.includes(tag)) {
+            bibList[id] = item;
+        }
+    }
+
+    event.returnValue = bibList;
 })
 
 

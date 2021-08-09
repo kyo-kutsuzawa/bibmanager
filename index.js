@@ -1,13 +1,13 @@
 const {ipcRenderer} = require('electron');
 
-let bibData = undefined;
+//let bibData = undefined;
 let focusedBibId = "";
 let focusedTagId = "";
 
 
 window.onload = function() {
     // Render bibliography
-    bibData = ipcRenderer.sendSync("get_bibData");
+    const bibData = ipcRenderer.sendSync("get_bibData");
     showBibList(bibData);
 
     // Render a tag list
@@ -93,10 +93,9 @@ function showTags(tags) {
 }
 
 
-function showInfo(bibData, key) {
-    // Get viewers
-    const infoViewer = document.getElementById("info-viewer");
-    const noteEditor = document.getElementById("note-editor");
+function showInfo(id) {
+    // Load a bibliography data
+    const data = ipcRenderer.sendSync("get_info", id);
 
     // Output to the information viewer
     const items = {
@@ -108,16 +107,15 @@ function showInfo(bibData, key) {
         "CITATION-KEY": "bib-key"
     }
     for (let item in items) {
-        if (bibData[key][item] != undefined) {
+        if (data[item] != undefined) {
             const element = document.getElementById(items[item]);
-            element.value = bibData[key][item];
+            element.value = data[item];
         }
     }
-    //const element = document.getElementById("bib-key");
-    //element.value = key;
 
     // Output notes to the note editor
-    const note = bibData[key].ANNOTE;
+    const noteEditor = document.getElementById("note-editor");
+    const note = data.ANNOTE;
     if (note != undefined) {
         noteEditor.value = note;
     }
@@ -136,11 +134,18 @@ function addTagClickHandler(element) {
 
 function updateInfo(key, newContent) {
     const id = focusedBibId.slice(5);
-
     ipcRenderer.sendSync("change_info", id, key, newContent);
-    bibData = ipcRenderer.sendSync("get_bibData");
-    showBibList(bibData);
-    setFocusedBibId(focusedBibId);
+
+    if (focusedTagId == "tags_all") {
+        const bibData = ipcRenderer.sendSync("get_bibData");
+        showBibList(bibData);
+        setFocusedBibId(focusedBibId);
+    }
+    else {
+        const bibData = ipcRenderer.sendSync("filter_by_tag", tag);
+        showBibList(bibData);
+        setFocusedBibId(focusedBibId);
+    }
 }
 
 
@@ -153,16 +158,20 @@ function setFocusedBibId(newId) {
 
     // Set focus to the current item
     focusedBibId = newId;
+    if (newId == "") {
+        return;
+    }
+
     const element = document.getElementById(focusedBibId);
     element.setAttribute("class", "focused");
 
     // Show bibliography information
-    const key = focusedBibId.slice(5);
-    showInfo(bibData, key);
+    const id = focusedBibId.slice(5);
+    showInfo(id);
 }
 
 
-function setFocusedTagId(newId) {
+function setFocusedTagId(newTagId) {
     // Unfocus the previously-focused item
     if (focusedTagId != "") {
         const prev_item = document.getElementById(focusedTagId);
@@ -170,7 +179,19 @@ function setFocusedTagId(newId) {
     }
 
     // Set focus to the current item
-    focusedTagId = newId;
-    const element = document.getElementById(focusedBibId);
+    focusedTagId = newTagId;
+    const element = document.getElementById(focusedTagId);
     element.setAttribute("class", "focused");
+
+    // Show a list of bibliography
+    let bibData = null;
+    if (newTagId == "tags_all") {
+        bibData = ipcRenderer.sendSync("get_bibData");
+    }
+    else {
+        const tag = focusedTagId.slice(4);
+        bibData = ipcRenderer.sendSync("filter_by_tag", tag);
+    }
+    showBibList(bibData);
+    setFocusedBibId("");
 }
