@@ -16,7 +16,12 @@ let focusedBibId = "";
 function loadbibData() {
     const rawbibData = fs.readFileSync(bibFileName, "utf-8");
     bibData = bibtex_parser(rawbibData);
+
+    for (let id in bibData) {
+        bibData[id]["CITATION-KEY"] = id;
+    }
 }
+
 
 // Save a bib file
 function savebibData() {
@@ -27,6 +32,16 @@ const {ipcMain} = require("electron")
 
 ipcMain.on("get_bibData", (event) => {
     event.returnValue = bibData;
+})
+
+ipcMain.on("change_info", (event, id, item, value) => {
+    if (!bibData[id]) {
+        event.returnValue = false;
+        return;
+    }
+
+    bibData[id][item] = value;
+    event.returnValue = true;
 })
 
 ipcMain.on("set_focus", (event, key) => {
@@ -62,10 +77,14 @@ ipcMain.on("extract_tags", (event) => {
 
 app.on("ready", () => {
     // Create the main window (here you can also set the window size, whether the Kiosk mode enables, etc.)
-    mainWindow = new BrowserWindow({width: 1280, height: 800,
+    mainWindow = new BrowserWindow({
+        width: 1280,
+        height: 800,
         webPreferences: {
-            nodeIntegration: true
-          }
+            nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true,
+        }
     });
 
     // Specify html file to show in Electron by absolute path (note that relative path does not work)

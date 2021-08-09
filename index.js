@@ -6,35 +6,77 @@ let focusedTagId = "";
 
 
 window.onload = function() {
+    // Render bibliography
     bibData = ipcRenderer.sendSync("get_bibData");
-    showBib(bibData);
+    showBibList(bibData);
 
+    // Render a tag list
     const tags = ipcRenderer.sendSync("extract_tags");
     showTags(tags);
 
-    registerInfoEvents();
+    // Register events for infoViewer
+    const keyTable = {
+        "bib-entry-type": "entryType",
+        "bib-title": "TITLE",
+        "bib-author": "AUTHOR",
+        "bib-tags": "MENDELEY-TAGS",
+        "bib-year": "YEAR",
+        "bib-key": "CITATION-KEY",
+        "note-editor": "ANNOTE"
+    }
+    for (let elementId in keyTable) {
+        const element = document.getElementById(elementId);
+        element.tabIndex = -1;
+        element.addEventListener("change", function(e) {
+            const key = keyTable[elementId];
+            updateInfo(key, element.value);
+        });
+    }
 }
 
 
-function showBib(bibData) {
-    const listViewer = document.getElementById("biblio-table");
+function showBibList(bibData) {
+    // Load a viewer element
+    const oldListViewer = document.getElementById("biblio-table");
+    const listViewer = oldListViewer.cloneNode(false);
+    oldListViewer.parentNode.replaceChild(listViewer, oldListViewer);
 
-    for (var key in bibData) {
-        // Setup item elements
+    for (let id in bibData) {
+        // Setup elements
         const tr = document.createElement("tr");
+        const td1 = document.createElement("td");
+        const td2 = document.createElement("td");
+        const td3 = document.createElement("td");
+
+        // Register elements
         listViewer.appendChild(tr);
-        registerBibList(tr, key);
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.appendChild(td3);
+
+        // Setup information
+        tr.setAttribute("id", "item_" + id);
+        td1.innerText = bibData[id].AUTHOR;
+        td2.innerText = bibData[id].TITLE;
+        td3.innerText = bibData[id].YEAR;
+
+        // Setup events
+        tr.onclick = function(e) {
+            setFocusedBibId(tr.id);
+        };
     }
 }
 
 
 function showTags(tags) {
+    // Load a viewer element
     const tagViewer = document.getElementById("tag-viewer");
 
     tags.forEach(tag => {
-        // Setup tag items
+        // Setup an item element
         const item = document.createElement("div");
         tagViewer.appendChild(item);
+
         item.setAttribute("id", "tag_" + tag);
         item.innerText = tag;
 
@@ -58,20 +100,21 @@ function showInfo(bibData, key) {
 
     // Output to the information viewer
     const items = {
-        entryType: "bib-entry-type",
-        TITLE: "bib-title",
-        AUTHOR: "bib-author",
+        "entryType": "bib-entry-type",
+        "TITLE": "bib-title",
+        "AUTHOR": "bib-author",
         "MENDELEY-TAGS": "bib-tags",
-        YEAR: "bib-year",
+        "YEAR": "bib-year",
+        "CITATION-KEY": "bib-key"
     }
-    for (var item in items) {
+    for (let item in items) {
         if (bibData[key][item] != undefined) {
             const element = document.getElementById(items[item]);
             element.value = bibData[key][item];
         }
     }
-    const element = document.getElementById("bib-key");
-    element.value = key;
+    //const element = document.getElementById("bib-key");
+    //element.value = key;
 
     // Output notes to the note editor
     const note = bibData[key].ANNOTE;
@@ -84,112 +127,50 @@ function showInfo(bibData, key) {
 }
 
 
-function registerBibList(tr, key) {
-    // Setup item elements
-    const td1 = document.createElement("td");
-    const td2 = document.createElement("td");
-    const td3 = document.createElement("td");
-
-    // Add items to the list viewer
-    tr.appendChild(td1);
-    tr.appendChild(td2);
-    tr.appendChild(td3);
-
-    // Setup information
-    tr.setAttribute("id", "item_" + key);
-    td1.innerText = bibData[key].AUTHOR;
-    td2.innerText = bibData[key].TITLE;
-    td3.innerText = bibData[key].YEAR;
-
-    // Setup events
-    tr.onclick = function(e) {
-        // Unfocus the previously-focused item
-        if (focusedBibId != "") {
-            const prev_item = document.getElementById(focusedBibId);
-            prev_item.removeAttribute("class");
-        }
-
-        // Set focus to the current item
-        focusedBibId = tr.id;
-        tr.setAttribute("class", "focused");
-
-        // Show bibliography information
-        showInfo(bibData, key, false);
-    };
-}
-
-
 function addTagClickHandler(element) {
     element.addEventListener("click", function(e) {
-        // Unfocus the previously-focused item
-        if (focusedTagId != "") {
-            const prev_item = document.getElementById(focusedTagId);
-            prev_item.removeAttribute("class");
-        }
-
-        // Set focus to the current item
-        focusedTagId = element.id;
-        element.setAttribute("class", "focused");
+        setFocusedTagId(element.id);
     });
 }
 
 
-function registerInfoEvents() {
-    idList = [
-        "bib-title",
-        "bib-author",
-        "bib-key",
-        "bib-entry-type",
-        "bib-year",
-        "bib-tags",
-        "note-editor"
-    ]
-    idList.forEach(id => {
-        const element = document.getElementById(id);
-        element.tabIndex = -1;
-        element.addEventListener("change", function(e) {
-            updateInfo(id, element.value);
-        });
-    });
+function updateInfo(key, newContent) {
+    const id = focusedBibId.slice(5);
+
+    ipcRenderer.sendSync("change_info", id, key, newContent);
+    bibData = ipcRenderer.sendSync("get_bibData");
+    showBibList(bibData);
+    setFocusedBibId(focusedBibId);
 }
 
 
-function updateInfo(id, newContent) {
-    const itemList = {
-        "bib-entry-type": "entryType",
-        "bib-title": "TITLE",
-        "bib-author": "AUTHOR",
-        "bib-tags": "MENDELEY-TAGS",
-        "bib-year": "YEAR",
-        "bib-key": "citation key",
-        "note-editor": "ANNOTE"
+function setFocusedBibId(newId) {
+    // Unfocus the previously-focused item
+    if (focusedBibId != "") {
+        const prev_item = document.getElementById(focusedBibId);
+        prev_item.removeAttribute("class");
     }
 
-    const item = itemList[id];
+    // Set focus to the current item
+    focusedBibId = newId;
+    const element = document.getElementById(focusedBibId);
+    element.setAttribute("class", "focused");
+
+    // Show bibliography information
     const key = focusedBibId.slice(5);
+    showInfo(bibData, key);
+}
 
-    if (id == "bib-key") {
-        const newKey = newContent;
 
-        // Check duplicate
-        if (newKey in bibData) {
-            return;
-        }
-
-        // Update bibData
-        bibData[newKey] = bibData[key];
-        delete bibData[key];
-
-        // Update bibliography list
-        const tr = document.getElementById("item_" + key);
-        tr.innerHTML = "";
-        focusedBibId = "item_" + newKey;
-        registerBibList(tr, newKey);
+function setFocusedTagId(newId) {
+    // Unfocus the previously-focused item
+    if (focusedTagId != "") {
+        const prev_item = document.getElementById(focusedTagId);
+        prev_item.removeAttribute("class");
     }
-    else {
-        bibData[key][item] = newContent;
-        const tr = document.getElementById("item_" + key);
-        tr.innerHTML = "";
-        registerBibList(tr, key);
-    }
+
+    // Set focus to the current item
+    focusedTagId = newId;
+    const element = document.getElementById(focusedBibId);
+    element.setAttribute("class", "focused");
 }
