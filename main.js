@@ -1,7 +1,7 @@
 const electron = require("electron");
+const {ipcMain} = require("electron")
 const bibtex_parser = require("bibtex-parser");
 const fs = require("fs");
-const { get } = require("http");
 
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
@@ -28,11 +28,10 @@ function savebibData() {
 }
 
 
-const {ipcMain} = require("electron")
-
 ipcMain.on("get_bibData", (event) => {
     event.returnValue = bibData;
 })
+
 
 ipcMain.on("change_info", (event, id, item, value) => {
     if (!bibData[id]) {
@@ -44,13 +43,16 @@ ipcMain.on("change_info", (event, id, item, value) => {
     event.returnValue = true;
 })
 
+
 ipcMain.on("set_focus", (event, key) => {
     focusedBibId = key;
 })
 
+
 ipcMain.on("get_focused_item", (event) => {
     focusedBibId = key;
 })
+
 
 ipcMain.on("extract_tags", (event) => {
     let tagArray = [];
