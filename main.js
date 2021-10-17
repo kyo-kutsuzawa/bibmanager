@@ -106,7 +106,10 @@ app.on("ready", () => {
     mainWindow.loadURL("file://" + __dirname + "/index.html");
 
     // Open a dev tool of Chromium
-    //mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
+
+    // Maximize the window
+    //mainWindow.maximize();
 
     mainWindow.on("closed", function() {
         mainWindow = null;

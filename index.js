@@ -65,27 +65,38 @@ function showBibList(bibData) {
             setFocusedBibId(tr.id);
         };
     }
+
+    // Regard the table as a ListView
+    listView.ListView("biblio-table");
 }
 
 
 function showTags(tags) {
-    // Load a viewer element
-    const tagViewer = document.getElementById("tag-viewer");
+    // Load a viewer element and renew it
+    const oldTagViewer = document.getElementById("tag-list");
+    const tagViewer = oldTagViewer.cloneNode(false);
+    oldTagViewer.parentNode.replaceChild(tagViewer, oldTagViewer);
 
+    // Add "All" element
+    const itemAll = document.createElement("div");
+    tagViewer.appendChild(itemAll);
+    itemAll.setAttribute("id", "tags_all");
+    itemAll.innerText = "All";
+    addTagClickHandler(document.getElementById("tags_all"));
+
+    // Add tags to the viewer
     tags.forEach(tag => {
-        // Setup an item element
+        // Add an item
         const item = document.createElement("div");
         tagViewer.appendChild(item);
 
+        // Setup information
         item.setAttribute("id", "tag_" + tag);
         item.innerText = tag;
 
         // Setup events
         addTagClickHandler(item);
     });
-
-    // Setup events to "All" item
-    addTagClickHandler(document.getElementById("tags_all"));
 
     // Set the initial focus to "All" item
     focusedTagId = "tags_all";
@@ -146,6 +157,9 @@ function updateInfo(key, newContent) {
         showBibList(bibData);
         setFocusedBibId(focusedBibId);
     }
+
+    const tags = ipcRenderer.sendSync("extract_tags");
+    showTags(tags);
 }
 
 
