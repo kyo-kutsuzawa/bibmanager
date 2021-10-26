@@ -12,7 +12,7 @@ window.onload = function() {
 
     // Render a tag list
     const tags = ipcRenderer.sendSync("extract_tags");
-    showTags(tags);
+    showTagList(tags);
 
     // Register events for infoViewer
     const keyTable = {
@@ -22,6 +22,7 @@ window.onload = function() {
         "bib-tags": "MENDELEY-TAGS",
         "bib-year": "YEAR",
         "bib-key": "CITATION-KEY",
+        "bib-file": "FILE",
         "note-editor": "ANNOTE"
     }
     for (let elementId in keyTable) {
@@ -65,13 +66,10 @@ function showBibList(bibData) {
             setFocusedBibId(tr.id);
         };
     }
-
-    // Regard the table as a ListView
-    listView.ListView("biblio-table");
 }
 
 
-function showTags(tags) {
+function showTagList(tags) {
     // Load a viewer element and renew it
     const oldTagViewer = document.getElementById("tag-list");
     const tagViewer = oldTagViewer.cloneNode(false);
@@ -82,7 +80,12 @@ function showTags(tags) {
     tagViewer.appendChild(itemAll);
     itemAll.setAttribute("id", "tags_all");
     itemAll.innerText = "All";
-    addTagClickHandler(document.getElementById("tags_all"));
+
+    // Setup an event for "All" element
+    const tags_all = document.getElementById("tags_all");
+    tags_all.onclick = function(e) {
+        setFocusedTagId(tags_all.id);
+    };
 
     // Add tags to the viewer
     tags.forEach(tag => {
@@ -95,7 +98,9 @@ function showTags(tags) {
         item.innerText = tag;
 
         // Setup events
-        addTagClickHandler(item);
+        item.onclick = function(e) {
+            setFocusedTagId(item.id);
+        };
     });
 
     // Set the initial focus to "All" item
@@ -115,7 +120,8 @@ function showInfo(id) {
         "AUTHOR": "bib-author",
         "MENDELEY-TAGS": "bib-tags",
         "YEAR": "bib-year",
-        "CITATION-KEY": "bib-key"
+        "CITATION-KEY": "bib-key",
+        "FILE": "bib-file"
     }
     for (let item in items) {
         if (data[item] != undefined) {
@@ -136,13 +142,6 @@ function showInfo(id) {
 }
 
 
-function addTagClickHandler(element) {
-    element.addEventListener("click", function(e) {
-        setFocusedTagId(element.id);
-    });
-}
-
-
 function updateInfo(key, newContent) {
     const id = focusedBibId.slice(5);
     ipcRenderer.sendSync("change_info", id, key, newContent);
@@ -159,7 +158,7 @@ function updateInfo(key, newContent) {
     }
 
     const tags = ipcRenderer.sendSync("extract_tags");
-    showTags(tags);
+    showTagList(tags);
 }
 
 
@@ -167,7 +166,9 @@ function setFocusedBibId(newId) {
     // Unfocus the previously-focused item
     if (focusedBibId != "") {
         const prev_item = document.getElementById(focusedBibId);
-        prev_item.removeAttribute("class");
+        if (prev_item != null) {
+            prev_item.removeAttribute("class");
+        }
     }
 
     // Set focus to the current item
@@ -189,7 +190,9 @@ function setFocusedTagId(newTagId) {
     // Unfocus the previously-focused item
     if (focusedTagId != "") {
         const prev_item = document.getElementById(focusedTagId);
-        prev_item.removeAttribute("class");
+        if (prev_item != null) {
+            prev_item.removeAttribute("class");
+        }
     }
 
     // Set focus to the current item
