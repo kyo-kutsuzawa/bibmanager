@@ -8,13 +8,13 @@ let focusedTagId = "";
 window.onload = function() {
     // Render bibliography
     const bibData = ipcRenderer.sendSync("get_bibData");
-    showBibList(bibData);
+    updateBibList(bibData);
 
     // Render a tag list
     const tags = ipcRenderer.sendSync("extract_tags");
-    showTagList(tags);
+    updateTagList(tags);
 
-    // Register events for infoViewer
+    // Register on-change events for the info viewer
     const keyTable = {
         "bib-entry-type": "entryType",
         "bib-title": "TITLE",
@@ -36,60 +36,58 @@ window.onload = function() {
 }
 
 
-function showBibList(bibData) {
-    // Load a viewer element
-    const oldListViewer = document.getElementById("biblio-table");
-    const listViewer = oldListViewer.cloneNode(false);
-    oldListViewer.parentNode.replaceChild(listViewer, oldListViewer);
+function updateBibList(bibData) {
+    // Load and clear the bibliography table
+    const oldBibViewer = document.getElementById("biblio-table");
+    const bibViewer = oldBibViewer.cloneNode(false);
+    oldBibViewer.parentNode.replaceChild(bibViewer, oldBibViewer);
 
+    // Add items to the bibliography table
     for (let id in bibData) {
-        // Setup elements
+        // Create a row
         const tr = document.createElement("tr");
-        const td1 = document.createElement("td");
-        const td2 = document.createElement("td");
-        const td3 = document.createElement("td");
-
-        // Register elements
-        listViewer.appendChild(tr);
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tr.appendChild(td3);
-
-        // Setup information
         tr.setAttribute("id", "item_" + id);
-        td1.innerText = bibData[id].AUTHOR;
-        td2.innerText = bibData[id].TITLE;
-        td3.innerText = bibData[id].YEAR;
-
-        // Setup events
+        bibViewer.appendChild(tr);
         tr.onclick = function(e) {
             setFocusedBibId(tr.id);
         };
+
+        // Add "author" item
+        const td1 = document.createElement("td");
+        td1.innerText = bibData[id].AUTHOR;
+        tr.appendChild(td1);
+
+        // Add "title" item
+        const td2 = document.createElement("td");
+        td2.innerText = bibData[id].TITLE;
+        tr.appendChild(td2);
+
+        // Add "publication year" item
+        const td3 = document.createElement("td");
+        td3.innerText = bibData[id].YEAR;
+        tr.appendChild(td3);
     }
 }
 
 
-function showTagList(tags) {
-    // Load a viewer element and renew it
+function updateTagList(tags) {
+    // Load and clear the tag viewer
     const oldTagViewer = document.getElementById("tag-list");
     const tagViewer = oldTagViewer.cloneNode(false);
     oldTagViewer.parentNode.replaceChild(tagViewer, oldTagViewer);
 
     // Add "All" element
-    const itemAll = document.createElement("div");
-    tagViewer.appendChild(itemAll);
-    itemAll.setAttribute("id", "tags_all");
-    itemAll.innerText = "All";
-
-    // Setup an event for "All" element
-    const tags_all = document.getElementById("tags_all");
-    tags_all.onclick = function(e) {
-        setFocusedTagId(tags_all.id);
+    const tagAll = document.createElement("div");
+    tagViewer.appendChild(tagAll);
+    tagAll.setAttribute("id", "tags_all");
+    tagAll.innerText = "All";
+    tagAll.onclick = function(e) {
+        setFocusedTagId(tagAll.id);
     };
 
-    // Add tags to the viewer
+    // Add tag items to the tag viewer
     tags.forEach(tag => {
-        // Add an item
+        // Create an item
         const item = document.createElement("div");
         tagViewer.appendChild(item);
 
@@ -148,17 +146,17 @@ function updateInfo(key, newContent) {
 
     if (focusedTagId == "tags_all") {
         const bibData = ipcRenderer.sendSync("get_bibData");
-        showBibList(bibData);
+        updateBibList(bibData);
         setFocusedBibId(focusedBibId);
     }
     else {
         const bibData = ipcRenderer.sendSync("filter_by_tag", tag);
-        showBibList(bibData);
+        updateBibList(bibData);
         setFocusedBibId(focusedBibId);
     }
 
     const tags = ipcRenderer.sendSync("extract_tags");
-    showTagList(tags);
+    updateTagList(tags);
 }
 
 
@@ -209,6 +207,6 @@ function setFocusedTagId(newTagId) {
         const tag = focusedTagId.slice(4);
         bibData = ipcRenderer.sendSync("filter_by_tag", tag);
     }
-    showBibList(bibData);
+    updateBibList(bibData);
     setFocusedBibId("");
 }
