@@ -67,6 +67,8 @@ function updateBibList(bibData) {
         td3.innerText = bibData[id].YEAR;
         tr.appendChild(td3);
     }
+
+    resetInfoViewer();
 }
 
 
@@ -118,14 +120,31 @@ function showInfo(id) {
         "AUTHOR": "bib-author",
         "MENDELEY-TAGS": "bib-tags",
         "YEAR": "bib-year",
-        "CITATION-KEY": "bib-key",
-        "FILE": "bib-file"
+        "CITATION-KEY": "bib-key"
     }
     for (let item in items) {
         if (data[item] != undefined) {
             const element = document.getElementById(items[item]);
             element.value = data[item];
         }
+    }
+
+    // Clear previous file buttons
+    const fileList = document.getElementById("bib-file");
+    fileList.textContent = "";
+
+    // Add file buttons
+    if (data["FILE"] != undefined) {
+        const fileButton = document.createElement("button");
+        fileList.appendChild(fileButton);
+
+        fileButton.textContent = "File 1";
+        fileButton.setAttribute("title", data["FILE"]);
+
+        fileButton.addEventListener("click", function(e) {
+            ipcRenderer.sendSync("open_pdf", id);
+        });
+
     }
 
     // Output notes to the note editor
@@ -137,6 +156,28 @@ function showInfo(id) {
     else {
         noteEditor.value = "";
     }
+}
+
+
+function resetInfoViewer() {
+    // Output to the information viewer
+    const items = {
+        "entryType": "bib-entry-type",
+        "TITLE": "bib-title",
+        "AUTHOR": "bib-author",
+        "MENDELEY-TAGS": "bib-tags",
+        "YEAR": "bib-year",
+        "CITATION-KEY": "bib-key",
+        "FILE": "bib-file"
+    }
+    for (let item in items) {
+        const element = document.getElementById(items[item]);
+        element.value = "";
+    }
+
+    // Output notes to the note editor
+    const noteEditor = document.getElementById("note-editor");
+    const note = "";
 }
 
 

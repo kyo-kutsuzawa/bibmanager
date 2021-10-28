@@ -90,6 +90,16 @@ ipcMain.on("filter_by_tag", (event, tag) => {
 })
 
 
+ipcMain.on("open_pdf", (event, id) => {
+    const data = bibData[id];
+    const filename = data["FILE"];
+
+    console.log(filename);
+
+    //electron.shell.openExternal(filename);
+})
+
+
 app.on("ready", () => {
     // Create the main window (here you can also set the window size, whether the Kiosk mode enables, etc.)
     mainWindow = new BrowserWindow({
