@@ -96,7 +96,7 @@ ipcMain.on("open_pdf", (event, id) => {
 
     console.log(filename);
 
-    //electron.shell.openExternal(filename);
+    electron.shell.openPath(filename);
 })
 
 
